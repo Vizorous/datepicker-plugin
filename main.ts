@@ -1,4 +1,4 @@
-import { App, Editor, Plugin, PluginSettingTab, Setting, moment, Platform, Notice, setIcon } from 'obsidian';
+import { App, Editor, Plugin, PluginSettingTab, Setting, moment, Platform, Notice, setIcon } from "obsidian";
 import {
 	ViewUpdate,
 	PluginValue,
@@ -6,22 +6,21 @@ import {
 	ViewPlugin,
 	WidgetType,
 	Decoration,
-	DecorationSet
+	DecorationSet,
 } from "@codemirror/view";
-import { platform } from 'os';
+import { platform } from "os";
 
 interface DateMatch {
 	from: number;
 	to: number;
 	value: string;
 	format: DateFormat;
-
 }
 interface DateFormat {
 	regex: RegExp;
 	formatToUser: string;
 	formatToPicker: string;
-	type: 'DATE' | 'DATETIME' | 'TIME';
+	type: "DATE" | "DATETIME" | "TIME";
 }
 interface VisibleText {
 	from: number;
@@ -31,24 +30,28 @@ interface VisibleText {
 
 class DateButtonWidget extends WidgetType {
 	toDOM(): HTMLElement {
-		const button = document.createElement('span');
-		button.className = 'datepicker-button';
-		setIcon(button, 'calendar');
+		const button = document.createElement("span");
+		button.className = "datepicker-button";
+		setIcon(button, "calendar");
 		return button;
 	}
-	ignoreEvent() { return false };
+	ignoreEvent() {
+		return false;
+	}
 	eq(): boolean {
 		return true;
 	}
 }
 class TimeButtonWidget extends WidgetType {
 	toDOM(): HTMLElement {
-		const button = document.createElement('span');
-		button.className = 'datepicker-button';
-		setIcon(button, 'clock');
+		const button = document.createElement("span");
+		button.className = "datepicker-button";
+		setIcon(button, "clock");
 		return button;
 	}
-	ignoreEvent() { return false };
+	ignoreEvent() {
+		return false;
+	}
 	eq(): boolean {
 		return true;
 	}
@@ -56,47 +59,49 @@ class TimeButtonWidget extends WidgetType {
 
 function pickerButtons(dateMatches: DateMatch[]) {
 	const buttons = [];
-	if (!DatepickerPlugin.settings.showDateButtons && !DatepickerPlugin.settings.showTimeButtons) return Decoration.set([]);
+	if (!DatepickerPlugin.settings.showDateButtons && !DatepickerPlugin.settings.showTimeButtons)
+		return Decoration.set([]);
 
 	for (const dateMatch of dateMatches) {
-		if (DatepickerPlugin.settings.showDateButtons && (dateMatch.format.type === 'DATE' || dateMatch.format.type === 'DATETIME')) {
+		if (
+			DatepickerPlugin.settings.showDateButtons &&
+			(dateMatch.format.type === "DATE" || dateMatch.format.type === "DATETIME")
+		) {
 			let buttonDeco = Decoration.widget({
 				widget: new DateButtonWidget(),
-				side: -1
-			})
+				side: -1,
+			});
 			buttons.push(buttonDeco.range(dateMatch.from));
-		} else
-			if (DatepickerPlugin.settings.showTimeButtons && dateMatch.format.type === 'TIME') {
-				let buttonDeco = Decoration.widget({
-					widget: new TimeButtonWidget(),
-					side: -1
-				})
-				buttons.push(buttonDeco.range(dateMatch.from));
-			}
+		} else if (DatepickerPlugin.settings.showTimeButtons && dateMatch.format.type === "TIME") {
+			let buttonDeco = Decoration.widget({
+				widget: new TimeButtonWidget(),
+				side: -1,
+			});
+			buttons.push(buttonDeco.range(dateMatch.from));
+		}
 	}
 	return Decoration.set(buttons, true);
 }
 
 class DatepickerCMPlugin implements PluginValue {
-
 	private view: EditorView;
 
 	datepickerPositionHandler() {
 		if (this.datepicker === undefined) return;
 		this.view.requestMeasure({
-			read: state => {
+			read: (state) => {
 				let pos = state.coordsAtPos(this.datepicker?.cursorPosition!);
 				return pos;
 			},
-			write: pos => {
+			write: (pos) => {
 				if (pos) {
 					this.datepicker!.updatePosition({
 						top: pos!.top,
 						left: pos!.left,
-						bottom: pos!.bottom
+						bottom: pos!.bottom,
 					});
 				}
-			}
+			},
 		});
 	}
 	datepickerScrollHandler = () => {
@@ -105,58 +110,60 @@ class DatepickerCMPlugin implements PluginValue {
 
 	private formats: DateFormat[] = [
 		{
-			regex: /\d{4}[-\/\\.]{1}\d{1,2}[-\/\\.]{1}\d{1,2}[ T]\d{1,2}:\d{1,2}( )?([apm]{2})/ig,
+			regex: /\d{4}[-\/\\.]{1}\d{1,2}[-\/\\.]{1}\d{1,2}[ T]\d{1,2}:\d{1,2}( )?([apm]{2})/gi,
 			formatToUser: "YYYY-MM-DD hh:mm A",
 			formatToPicker: "YYYY-MM-DDTHH:mm",
-			type: 'DATETIME'
+			type: "DATETIME",
 		},
 		{
 			regex: /\d{4}[-\/\\.]{1}\d{1,2}[-\/\\.]{1}\d{1,2}[ T]\d{1,2}:\d{1,2}/g,
 			formatToUser: "YYYY-MM-DD HH:mm",
 			formatToPicker: "YYYY-MM-DDTHH:mm",
-			type: 'DATETIME'
+			type: "DATETIME",
 		},
 		{
-			regex: /\d{1,2}[-\/\\.]{1}\d{1,2}[-\/\\.]{1}\d{4} \d{1,2}:\d{1,2}( )?([apm]{2})/ig,
+			regex: /\d{1,2}[-\/\\.]{1}\d{1,2}[-\/\\.]{1}\d{4} \d{1,2}:\d{1,2}( )?([apm]{2})/gi,
 			formatToUser: "DD-MM-YYYY hh:mm A",
 			formatToPicker: "YYYY-MM-DDTHH:mm",
-			type: 'DATETIME'
+			type: "DATETIME",
 		},
 		{
 			regex: /\d{1,2}[-\/\\.]{1}\d{4}[ T]\d{1,2}:\d{1,2}/g,
 			formatToUser: "DD-MM-YYYY HH:mm",
 			formatToPicker: "YYYY-MM-DDTHH:mm",
-			type: 'DATETIME'
+			type: "DATETIME",
 		},
 		{
 			regex: /\d{4}[-\/\\.]{1}\d{1,2}[-\/\\.]{1}\d{1,2}/g,
 			formatToUser: "YYYY-MM-DD",
 			formatToPicker: "YYYY-MM-DD",
-			type: 'DATE'
+			type: "DATE",
 		},
 		{
 			regex: /\d{1,2}[-\/\\.]{1}\d{1,2}[-\/\\.]{1}\d{4}/g,
 			formatToUser: "DD-MM-YYYY",
 			formatToPicker: "YYYY-MM-DD",
-			type: 'DATE'
+			type: "DATE",
 		},
 		{
-			regex: /\d{1,2}:\d{1,2}( )?([apm]{2})/ig,
+			regex: /\d{1,2}:\d{1,2}( )?([apm]{2})/gi,
 			formatToUser: "hh:mm A",
 			formatToPicker: "HH:mm",
-			type: 'TIME'
+			type: "TIME",
 		},
 		{
 			regex: /\d{1,2}:\d{1,2}/g,
 			formatToUser: "HH:mm",
 			formatToPicker: "HH:mm",
-			type: 'TIME'
-		}
-	]
+			type: "TIME",
+		},
+	];
 
 	private getVisibleDates(view: EditorView): DateMatch[] {
 		let visibleText: VisibleText[] = [];
-		visibleText = view.visibleRanges.map(r => { return { from: r.from, to: r.to, text: view.state.doc.sliceString(r.from, r.to) } });
+		visibleText = view.visibleRanges.map((r) => {
+			return { from: r.from, to: r.to, text: view.state.doc.sliceString(r.from, r.to) };
+		});
 		let matchingDate: RegExpExecArray | null;
 		const dateMatches: DateMatch[] = [];
 
@@ -171,9 +178,20 @@ class DatepickerCMPlugin implements PluginValue {
 						 as their own date/time, eg: the time portion of a date/time is not seperate from the date portion, two dates on
 						 the same line with no space or seperation should not be recognized as several dates (this was a bug)
 						 */
-						if (dateMatches.some((m) =>
-							matchingDateStart >= m.from && ((matchingDateEnd <= m.to) || (matchingDateStart <= m.to)))) continue;
-						dateMatches.push({ from: matchingDate.index + vt.from, to: matchingDate.index + matchingDate[0].length + vt.from, value: matchingDate[0], format: format });
+						if (
+							dateMatches.some(
+								(m) =>
+									matchingDateStart >= m.from &&
+									(matchingDateEnd <= m.to || matchingDateStart <= m.to)
+							)
+						)
+							continue;
+						dateMatches.push({
+							from: matchingDate.index + vt.from,
+							to: matchingDate.index + matchingDate[0].length + vt.from,
+							value: matchingDate[0],
+							format: format,
+						});
 					}
 				}
 		}
@@ -188,9 +206,18 @@ class DatepickerCMPlugin implements PluginValue {
 			while ((matchingDate = format.regex.exec(noteText)) !== null) {
 				const matchingDateStart = matchingDate?.index!;
 				const matchingDateEnd = matchingDate?.index! + matchingDate![0].length;
-				if (dateMatches.some((m) =>
-					matchingDateStart >= m.from && ((matchingDateEnd <= m.to) || (matchingDateStart <= m.to)))) continue;
-				dateMatches.push({ from: matchingDate.index, to: matchingDate.index + matchingDate[0].length, value: matchingDate[0], format: format });
+				if (
+					dateMatches.some(
+						(m) => matchingDateStart >= m.from && (matchingDateEnd <= m.to || matchingDateStart <= m.to)
+					)
+				)
+					continue;
+				dateMatches.push({
+					from: matchingDate.index,
+					to: matchingDate.index + matchingDate[0].length,
+					value: matchingDate[0],
+					format: format,
+				});
 			}
 		});
 		return dateMatches;
@@ -198,12 +225,12 @@ class DatepickerCMPlugin implements PluginValue {
 
 	public getNextMatch(view: EditorView, cursorPosition: number): DateMatch | undefined {
 		const matches = this.getAllDates(view).sort((a, b) => a.from - b.from);
-		return matches.find(m => m.from > cursorPosition);
+		return matches.find((m) => m.from > cursorPosition);
 	}
 
 	public getPreviousMatch(view: EditorView, cursorPosition: number): DateMatch | undefined {
 		const matches = this.getAllDates(view).sort((a, b) => b.from - a.from);
-		return matches.find(m => m.to < cursorPosition);
+		return matches.find((m) => m.to < cursorPosition);
 	}
 
 	decorations: DecorationSet;
@@ -212,7 +239,9 @@ class DatepickerCMPlugin implements PluginValue {
 
 	constructor(view: EditorView) {
 		this.view = view;
-		view.scrollDOM.addEventListener("scroll", this.datepickerScrollHandler.bind(this, view), { signal: this.scrollEventAbortController.signal });
+		view.scrollDOM.addEventListener("scroll", this.datepickerScrollHandler.bind(this, view), {
+			signal: this.scrollEventAbortController.signal,
+		});
 		this.dates = this.getVisibleDates(view);
 		this.decorations = pickerButtons(this.dates);
 	}
@@ -228,89 +257,96 @@ class DatepickerCMPlugin implements PluginValue {
 
 	openDatepicker(view: EditorView, match: DateMatch) {
 		view.requestMeasure({
-			read: view => {
+			read: (view) => {
 				let pos = view.coordsAtPos(match.from);
 				return pos;
 			},
-			write: pos => {
+			write: (pos) => {
 				if (!pos) {
 					console.error("position is undefined");
 					return;
 				}
 
 				this.datepicker = new Datepicker();
-				this.datepicker.open(pos, match
-					, (result) => {
-						const resultFromPicker = moment(result);
-						if (!resultFromPicker.isValid()) {
-							return;
-						}
-						const dateFromPicker = resultFromPicker.format(match.format.formatToUser);
-						if (dateFromPicker === match.value) return;
-						this.performingReplace = true;
-						setTimeout(() => { this.performingReplace = false; }, 300);
-						let transaction = view.state.update({
-							changes: {
-								from: match.from,
-								to: match.to,
-								insert: dateFromPicker
-							}
-						});
-						view.dispatch(transaction);
-
-						if (this.match !== undefined && this.match.from !== match.from && DatepickerPlugin.settings.selectDateText) {
-							const m = this.match;
-							setTimeout(() => {
-								view.dispatch({ selection: { anchor: m.from, head: m.to } })
-								// this.performedSelectText = true;
-							}, 0);
-						}
-
+				this.datepicker.open(pos, match, (result) => {
+					const resultFromPicker = moment(result);
+					if (!resultFromPicker.isValid()) {
+						return;
+					}
+					const dateFromPicker = resultFromPicker.format(match.format.formatToUser);
+					if (dateFromPicker === match.value) return;
+					this.performingReplace = true;
+					setTimeout(() => {
+						this.performingReplace = false;
+					}, 300);
+					let transaction = view.state.update({
+						changes: {
+							from: match.from,
+							to: match.to,
+							insert: dateFromPicker,
+						},
 					});
-			}
+					view.dispatch(transaction);
+
+					if (
+						this.match !== undefined &&
+						this.match.from !== match.from &&
+						DatepickerPlugin.settings.selectDateText
+					) {
+						const m = this.match;
+						setTimeout(() => {
+							view.dispatch({ selection: { anchor: m.from, head: m.to } });
+							// this.performedSelectText = true;
+						}, 0);
+					}
+				});
+			},
 		});
 	}
 
-
 	update(update: ViewUpdate) {
-
 		this.view = update.view;
 
-		if (update.docChanged || update.geometryChanged || update.viewportChanged || update.heightChanged || this.performingReplace) {
+		if (
+			update.docChanged ||
+			update.geometryChanged ||
+			update.viewportChanged ||
+			update.heightChanged ||
+			this.performingReplace
+		) {
 			this.datepickerPositionHandler();
 			this.dates = this.getVisibleDates(update.view);
 			this.decorations = pickerButtons(this.dates);
 		}
 
-
 		/*
 		CM fires two update events for selection change,
 		I use the code section below to ignore the second one
 	*/
-		if (update.docChanged === false &&
+		if (
+			update.docChanged === false &&
 			update.state.selection.main.from === update.startState.selection.main.from &&
 			update.state.selection.main.to === update.startState.selection.main.to
-		) return;
-
+		)
+			return;
 
 		const { view } = update;
 
 		const cursorPosition = view.state.selection.main.head;
 
-		this.match = this.dates.find(date => date.from <= cursorPosition && date.to >= cursorPosition);
+		this.match = this.dates.find((date) => date.from <= cursorPosition && date.to >= cursorPosition);
 		if (this.match) {
-
 			const { from } = update.state.selection.main;
 			const { to } = update.state.selection.main;
-			if (from !== to)// Closes datepicker if selection is a range and the range is not the entire matched datetime
+			if (from !== to)
 				if (from !== this.match.from || to !== this.match.to) {
+					// Closes datepicker if selection is a range and the range is not the entire matched datetime
 					if (this.datepicker !== undefined) this.datepicker.respectSettingAndClose();
 					return;
 				}
 
 			let sameMatch = false;
-			if (this.previousDateMatch !== undefined)
-				sameMatch = this.previousDateMatch.from === this.match.from;
+			if (this.previousDateMatch !== undefined) sameMatch = this.previousDateMatch.from === this.match.from;
 
 			if (this.datepicker !== undefined) {
 				if (this.previousDateMatch !== undefined) {
@@ -319,25 +355,29 @@ class DatepickerCMPlugin implements PluginValue {
 					if (sameMatch) {
 						if (this.datepicker?.closedByButton || Datepicker.escPressed || Datepicker.enterPressed) return;
 					} else {
-						this.performedSelectText = false;//Allow possibly selecting datetime text again
+						this.performedSelectText = false; //Allow possibly selecting datetime text again
 						if (!Datepicker.openedByButton) {
-							Datepicker.calendarImmediatelyShownOnce = false;//Allow possibly showing calendar automatically again
+							Datepicker.calendarImmediatelyShownOnce = false; //Allow possibly showing calendar automatically again
 						} else Datepicker.openedByButton = false;
 					}
 				}
-			} else this.performedSelectText = false;//Allow possibly selecting datetime text again
-			if (DatepickerPlugin.settings.selectDateText && !this.performedSelectText && this.match !== undefined && (!update.docChanged || Datepicker.performedInsertCommand)) {
+			} else this.performedSelectText = false; //Allow possibly selecting datetime text again
+			if (
+				DatepickerPlugin.settings.selectDateText &&
+				!this.performedSelectText &&
+				this.match !== undefined &&
+				(!update.docChanged || Datepicker.performedInsertCommand)
+			) {
 				setTimeout(() => view.dispatch({ selection: { anchor: this.match!.from, head: this.match!.to } }), 0);
 				this.performedSelectText = true;
 			}
 
-
-
 			this.previousDateMatch = this.match;
 			if (DatepickerPlugin.settings.showAutomatically) {
 				// prevent reopening date picker on the same date field when just performed insert command
-				if (Datepicker.performedInsertCommand) setTimeout(() => Datepicker.performedInsertCommand = false, 300);
-				if (Datepicker.openedByButton) setTimeout(() => Datepicker.openedByButton = false, 300);
+				if (Datepicker.performedInsertCommand)
+					setTimeout(() => (Datepicker.performedInsertCommand = false), 300);
+				if (Datepicker.openedByButton) setTimeout(() => (Datepicker.openedByButton = false), 300);
 				if (!Datepicker.performedInsertCommand && !Datepicker.openedByButton && !this.performingReplace)
 					setTimeout(() => this.openDatepicker(view, this.match!), 0);
 			}
@@ -353,8 +393,6 @@ class DatepickerCMPlugin implements PluginValue {
 					}
 			}
 		}
-
-
 	}
 
 	destroy() {
@@ -370,27 +408,26 @@ export const datepickerCMPlugin = ViewPlugin.fromClass(DatepickerCMPlugin, {
 	eventHandlers: {
 		mousedown: (e, view) => {
 			datepickerButtonEventHandler(e, view);
-
 		},
 		touchend: (e, view) => {
 			datepickerButtonEventHandler(e, view);
 		},
-	}
+	},
 });
 
 const pickerButtonsAbortController = new AbortController();
-let dbounce = false;//debouncing is essential for button to work correctly on mobile
+let dbounce = false; //debouncing is essential for button to work correctly on mobile
 function datepickerButtonEventHandler(e: Event, view: EditorView) {
 	if (dbounce) return;
 	dbounce = true;
-	setTimeout(() => dbounce = false, 100);
-	let target = e.target as HTMLElement
+	setTimeout(() => (dbounce = false), 100);
+	let target = e.target as HTMLElement;
 	const dpCMPlugin = view.plugin(datepickerCMPlugin);
 	if (!dpCMPlugin) return;
 	if (target.matches(".datepicker-button, .datepicker-button *")) {
 		e.preventDefault();
 		const cursorPositionAtButton = view.posAtDOM(target);
-		const dateMatch = dpCMPlugin!.dates.find(date => date.from === cursorPositionAtButton)!;
+		const dateMatch = dpCMPlugin!.dates.find((date) => date.from === cursorPositionAtButton)!;
 		// this toggles showing the datepicker if it is already open at the button position
 		if (dpCMPlugin!.datepicker !== undefined && dpCMPlugin.datepicker.isOpened) {
 			dpCMPlugin!.datepicker.respectSettingAndClose();
@@ -400,14 +437,14 @@ function datepickerButtonEventHandler(e: Event, view: EditorView) {
 			Datepicker.openedByButton = true;
 			Datepicker.calendarImmediatelyShownOnce = false;
 			setTimeout(() => {
-				if (DatepickerPlugin.settings.selectDateText) setTimeout(() => view.dispatch({ selection: { anchor: dateMatch.from, head: dateMatch.to } }), 0);
+				if (DatepickerPlugin.settings.selectDateText)
+					setTimeout(() => view.dispatch({ selection: { anchor: dateMatch.from, head: dateMatch.to } }), 0);
 				dpCMPlugin!.openDatepicker(view, dateMatch);
 			}, 0);
 		}
 	}
 	return true;
 }
-
 
 interface DatepickerPluginSettings {
 	showDateButtons: boolean;
@@ -430,22 +467,20 @@ const DEFAULT_SETTINGS: DatepickerPluginSettings = {
 	autofocus: false,
 	focusOnArrowDown: false,
 	insertIn24HourFormat: false,
-	selectDateText: false
-}
+	selectDateText: false,
+};
 
 export default class DatepickerPlugin extends Plugin {
-
 	public static settings: DatepickerPluginSettings = DEFAULT_SETTINGS;
 
 	async onload() {
-
 		await this.loadSettings();
 
 		this.registerEditorExtension(datepickerCMPlugin);
 
 		this.addCommand({
-			id: 'edit-datetime',
-			name: 'Edit date/time',
+			id: "edit-datetime",
+			name: "Edit date/time",
 			editorCallback: (editor: Editor) => {
 				// @ts-expect-error, not typed
 				const editorView = editor.cm as EditorView;
@@ -455,16 +490,16 @@ export default class DatepickerPlugin extends Plugin {
 					return;
 				}
 				const plugin = editorView.plugin(datepickerCMPlugin);
-				const match = plugin!.dates.find(date => date.from <= cursorPosition && date.to >= cursorPosition);
+				const match = plugin!.dates.find((date) => date.from <= cursorPosition && date.to >= cursorPosition);
 				if (match) {
 					plugin!.openDatepicker(editorView, match);
 				} else new Notice("Please select a date/time");
-			}
-		})
+			},
+		});
 
 		this.addCommand({
-			id: 'insert-date',
-			name: 'Insert new date',
+			id: "insert-date",
+			name: "Insert new date",
 			editorCallback: (editor: Editor) => {
 				// @ts-expect-error, not typed
 				const editorView = editor.cm as EditorView;
@@ -473,68 +508,39 @@ export default class DatepickerPlugin extends Plugin {
 				const pos = editorView.coordsAtPos(cursorPosition);
 				if (!pos) return;
 
-				const datepicker = new Datepicker()
-				const dateFormat: DateFormat = { regex: new RegExp(""), type: "DATE", formatToUser: "", formatToPicker: "" }
+				const datepicker = new Datepicker();
+				const dateFormat: DateFormat = {
+					regex: new RegExp(""),
+					type: "DATE",
+					formatToUser: "",
+					formatToPicker: "",
+				};
 				const dateType: DateMatch = { from: cursorPosition, to: cursorPosition, value: "", format: dateFormat };
 				datepicker.open(
-					{ top: pos.top, left: pos.left, right: pos.right, bottom: pos.bottom }, dateType,
+					{ top: pos.top, left: pos.left, right: pos.right, bottom: pos.bottom },
+					dateType,
 					(result) => {
 						if (moment(result).isValid() === true) {
-							setTimeout(() => { // delay to wait for editor update to finish
+							setTimeout(() => {
+								// delay to wait for editor update to finish
 								Datepicker.performedInsertCommand = true;
 								editorView.dispatch({
 									changes: {
 										from: cursorPosition,
 										to: cursorPosition,
-										insert: moment(result).format("YYYY-MM-DD")
-									}
+										insert: moment(result).format("YYYY-MM-DD"),
+									},
 								});
 							}, 0);
 						} else new Notice("Please enter a valid date");
 					}
-				)
+				);
 				datepicker.focus();
-			}
+			},
 		});
 		this.addCommand({
-			id: 'insert-time',
-			name: 'Insert new time',
-			editorCallback: (editor: Editor) => {
-				// @ts-expect-error, not typed
-				const editorView = editor.cm as EditorView;
-				const cursorPosition = editorView.state.selection.main.to;
-				if (cursorPosition === undefined) return;
-				const pos = editorView.coordsAtPos(cursorPosition);
-				if (!pos) return;
-				const datepicker = new Datepicker()
-				const dateFormat: DateFormat = { regex: new RegExp(""), type: "TIME", formatToUser: "", formatToPicker: "" }
-				const dateType: DateMatch = { from: cursorPosition, to: cursorPosition, value: "", format: dateFormat };
-				datepicker.open(
-					{ top: pos.top, left: pos.left, right: pos.right, bottom: pos.bottom }, dateType,
-					(result) => {
-						if (moment(result, "HH:mm").isValid() === true) {
-							let timeFormat: string;
-							if (DatepickerPlugin.settings.insertIn24HourFormat) timeFormat = "HH:mm";
-							else timeFormat = "hh:mm A";
-							setTimeout(() => { // delay to wait for editor update to finish
-								Datepicker.performedInsertCommand = true;
-								editorView.dispatch({
-									changes: {
-										from: cursorPosition,
-										to: cursorPosition,
-										insert: moment(result).format(timeFormat)
-									}
-								});
-							}, 25);
-						} else new Notice("Please enter a valid time");
-					}
-				)
-				datepicker.focus();
-			}
-		});
-		this.addCommand({
-			id: 'insert-datetime',
-			name: 'Insert new date and time',
+			id: "insert-time",
+			name: "Insert new time",
 			editorCallback: (editor: Editor) => {
 				// @ts-expect-error, not typed
 				const editorView = editor.cm as EditorView;
@@ -543,34 +549,84 @@ export default class DatepickerPlugin extends Plugin {
 				const pos = editorView.coordsAtPos(cursorPosition);
 				if (!pos) return;
 				const datepicker = new Datepicker();
-				const dateFormat: DateFormat = { regex: new RegExp(""), type: "DATETIME", formatToUser: "", formatToPicker: "" }
+				const dateFormat: DateFormat = {
+					regex: new RegExp(""),
+					type: "TIME",
+					formatToUser: "",
+					formatToPicker: "",
+				};
 				const dateType: DateMatch = { from: cursorPosition, to: cursorPosition, value: "", format: dateFormat };
 				datepicker.open(
-					{ top: pos.top, left: pos.left, right: pos.right, bottom: pos.bottom }, dateType,
+					{ top: pos.top, left: pos.left, right: pos.right, bottom: pos.bottom },
+					dateType,
 					(result) => {
-						if (moment(result).isValid() === true) {
+						if (moment(result, "HH:mm").isValid() === true) {
 							let timeFormat: string;
 							if (DatepickerPlugin.settings.insertIn24HourFormat) timeFormat = "HH:mm";
 							else timeFormat = "hh:mm A";
-							setTimeout(() => { // delay to wait for editor update to finish		
+							setTimeout(() => {
+								// delay to wait for editor update to finish
 								Datepicker.performedInsertCommand = true;
 								editorView.dispatch({
 									changes: {
 										from: cursorPosition,
 										to: cursorPosition,
-										insert: moment(result).format("YYYY-MM-DD" + " " + timeFormat)
-									}
+										insert: moment(result).format(timeFormat),
+									},
+								});
+							}, 25);
+						} else new Notice("Please enter a valid time");
+					}
+				);
+				datepicker.focus();
+			},
+		});
+		this.addCommand({
+			id: "insert-datetime",
+			name: "Insert new date and time",
+			editorCallback: (editor: Editor) => {
+				// @ts-expect-error, not typed
+				const editorView = editor.cm as EditorView;
+				const cursorPosition = editorView.state.selection.main.to;
+				if (cursorPosition === undefined) return;
+				const pos = editorView.coordsAtPos(cursorPosition);
+				if (!pos) return;
+				const datepicker = new Datepicker();
+				const dateFormat: DateFormat = {
+					regex: new RegExp(""),
+					type: "DATETIME",
+					formatToUser: "",
+					formatToPicker: "",
+				};
+				const dateType: DateMatch = { from: cursorPosition, to: cursorPosition, value: "", format: dateFormat };
+				datepicker.open(
+					{ top: pos.top, left: pos.left, right: pos.right, bottom: pos.bottom },
+					dateType,
+					(result) => {
+						if (moment(result).isValid() === true) {
+							let timeFormat: string;
+							if (DatepickerPlugin.settings.insertIn24HourFormat) timeFormat = "HH:mm";
+							else timeFormat = "hh:mm A";
+							setTimeout(() => {
+								// delay to wait for editor update to finish
+								Datepicker.performedInsertCommand = true;
+								editorView.dispatch({
+									changes: {
+										from: cursorPosition,
+										to: cursorPosition,
+										insert: moment(result).format("YYYY-MM-DD" + " " + timeFormat),
+									},
 								});
 							}, 25);
 						} else new Notice("Please enter a valid date and time");
 					}
-				)
+				);
 				datepicker.focus();
-			}
+			},
 		});
 		this.addCommand({
-			id: 'insert-current-time',
-			name: 'Insert current time',
+			id: "insert-current-time",
+			name: "Insert current time",
 			editorCallback: (editor: Editor) => {
 				// @ts-expect-error, not typed
 				const editorView = editor.cm as EditorView;
@@ -584,15 +640,15 @@ export default class DatepickerPlugin extends Plugin {
 					changes: {
 						from: cursorPosition,
 						to: cursorPosition,
-						insert: moment().format(timeFormat)
-					}
-				})
-			}
+						insert: moment().format(timeFormat),
+					},
+				});
+			},
 		});
 
 		this.addCommand({
-			id: 'insert-current-datetime',
-			name: 'Insert current date and time',
+			id: "insert-current-datetime",
+			name: "Insert current date and time",
 			editorCallback: (editor: Editor) => {
 				// @ts-expect-error, not typed
 				const editorView = editor.cm as EditorView;
@@ -606,15 +662,15 @@ export default class DatepickerPlugin extends Plugin {
 					changes: {
 						from: cursorPosition,
 						to: cursorPosition,
-						insert: moment().format("YYYY-MM-DD" + " " + timeFormat)
-					}
-				})
-			}
+						insert: moment().format("YYYY-MM-DD" + " " + timeFormat),
+					},
+				});
+			},
 		});
 
 		this.addCommand({
-			id: 'insert-current-date',
-			name: 'Insert current date',
+			id: "insert-current-date",
+			name: "Insert current date",
 			editorCallback: (editor: Editor) => {
 				// @ts-expect-error, not typed
 				const editorView = editor.cm as EditorView;
@@ -625,15 +681,15 @@ export default class DatepickerPlugin extends Plugin {
 					changes: {
 						from: cursorPosition,
 						to: cursorPosition,
-						insert: moment().format("YYYY-MM-DD")
-					}
-				})
-			}
+						insert: moment().format("YYYY-MM-DD"),
+					},
+				});
+			},
 		});
 
 		this.addCommand({
-			id: 'select-next-datetime',
-			name: 'Select next date/time',
+			id: "select-next-datetime",
+			name: "Select next date/time",
 			editorCallback: (editor: Editor) => {
 				// @ts-expect-error, not typed
 				const editorView = editor.cm as EditorView;
@@ -646,17 +702,17 @@ export default class DatepickerPlugin extends Plugin {
 					editorView.dispatch({
 						selection: {
 							anchor: match.from,
-							head: match.from
+							head: match.from,
 						},
-						scrollIntoView: true
-					})
+						scrollIntoView: true,
+					});
 				} else new Notice("No next date/time found");
-			}
+			},
 		});
 
 		this.addCommand({
-			id: 'select-previous-datetime',
-			name: 'Select previous date/time',
+			id: "select-previous-datetime",
+			name: "Select previous date/time",
 			editorCallback: (editor: Editor) => {
 				// @ts-expect-error, not typed
 				const editorView = editor.cm as EditorView;
@@ -669,12 +725,12 @@ export default class DatepickerPlugin extends Plugin {
 					editorView.dispatch({
 						selection: {
 							anchor: match.from,
-							head: match.from
+							head: match.from,
 						},
-						scrollIntoView: true
-					})
+						scrollIntoView: true,
+					});
 				} else new Notice("No previous date/time found");
-			}
+			},
 		});
 
 		this.addSettingTab(new DatepickerSettingTab(this.app, this));
@@ -689,24 +745,22 @@ export default class DatepickerPlugin extends Plugin {
 				if (!dpCMPlugin) return;
 				let delay = 350;
 				// if(dpCMPlugin.performingReplace) delay = 30;
-				setTimeout(() => { // restores selection after replacing text on previuos date/time
+				setTimeout(() => {
+					// restores selection after replacing text on previuos date/time
 					const { match } = dpCMPlugin;
 					if (match !== undefined) {
 						if (DatepickerPlugin.settings.selectDateText)
-							editorView.dispatch({ selection: { anchor: match!.from, head: match!.to } })
-						if (DatepickerPlugin.settings.showAutomatically)
-							dpCMPlugin.openDatepicker(editorView, match);
+							editorView.dispatch({ selection: { anchor: match!.from, head: match!.to } });
+						if (DatepickerPlugin.settings.showAutomatically) dpCMPlugin.openDatepicker(editorView, match);
 					}
 				}, delay);
 				Datepicker.escPressed = false;
 				Datepicker.calendarImmediatelyShownOnce = false;
-			}
-			)
-		)
+			})
+		);
 	}
 
-	onunload() {
-	}
+	onunload() {}
 
 	async loadSettings() {
 		DatepickerPlugin.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -715,11 +769,9 @@ export default class DatepickerPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(DatepickerPlugin.settings);
 	}
-
 }
 
 class Datepicker {
-
 	private onSubmit: (result: string) => void;
 	private submited = false;
 	public isOpened = false;
@@ -738,23 +790,24 @@ class Datepicker {
 	public static calendarImmediatelyShownOnce = false;
 	// Used for preventing blur event from inserting date twice
 	public static enterPressed = false;
-
-	constructor() {
+	editor: Editor | undefined;
+	constructor(editor?: Editor) {
 		this.close();
+		this.editor = editor;
 	}
 
-
-	public updatePosition(pos: { top: number, left: number, bottom: number }) {
+	public updatePosition(pos: { top: number; left: number; bottom: number }) {
 		// TODO: add support for rtl windows: pseudo:if(window.rtl)
 		const left = pos.left - this.viewContainer.getBoundingClientRect().left;
 		if (left + this.pickerContainer.offsetWidth > this.viewContainer.offsetWidth)
-			this.pickerContainer.style.left = left - ((left + this.pickerContainer.offsetWidth) - this.viewContainer.offsetWidth) + 'px';
-		else this.pickerContainer.style.left = left + 'px';
+			this.pickerContainer.style.left =
+				left - (left + this.pickerContainer.offsetWidth - this.viewContainer.offsetWidth) + "px";
+		else this.pickerContainer.style.left = left + "px";
 
-		const leafTop = this.viewContainer.closest('.workspace-leaf-content')!.getBoundingClientRect().top;
+		const leafTop = this.viewContainer.closest(".workspace-leaf-content")!.getBoundingClientRect().top;
 		if (pos.bottom - leafTop > this.viewContainer.offsetHeight)
-			this.pickerContainer.style.top = pos.top - leafTop - this.pickerContainer.offsetHeight + 'px';
-		else this.pickerContainer.style.top = pos.bottom - leafTop + 'px';
+			this.pickerContainer.style.top = pos.top - leafTop - this.pickerContainer.offsetHeight + "px";
+		else this.pickerContainer.style.top = pos.bottom - leafTop + "px";
 	}
 
 	public focus() {
@@ -788,13 +841,15 @@ class Datepicker {
 		if (moment(submitValue).format(this.datetime.format.formatToUser) === this.datetime.value) return;
 		if (this.datetime.format.type === "TIME")
 			// Neccessary for momentjs to parse and format time
-			submitValue = moment().format('YYYY-MM-DD') + "T" + this.pickerInput.value;
+			submitValue = moment().format("YYYY-MM-DD") + "T" + this.pickerInput.value;
 
 		setTimeout(() => this.onSubmit(submitValue), 0);
 	}
 
-	public open(pos: { top: number, left: number, right: number, bottom: number },
-		datetime: DateMatch, onSubmit: (result: string) => void
+	public open(
+		pos: { top: number; left: number; right: number; bottom: number },
+		datetime: DateMatch,
+		onSubmit: (result: string) => void
 	) {
 		this.onSubmit = onSubmit;
 		this.datetime = datetime;
@@ -803,58 +858,75 @@ class Datepicker {
 		Datepicker.escPressed = false;
 		Datepicker.enterPressed = false;
 
-		this.viewContainer = activeDocument.querySelector('.workspace-leaf.mod-active')?.querySelector('.cm-editor')!;
+		this.viewContainer = activeDocument.querySelector(".workspace-leaf.mod-active")?.querySelector(".cm-editor")!;
 		if (!this.viewContainer) {
 			console.error("Could not find view container");
 			return;
 		}
-		this.pickerContainer = this.viewContainer.createEl('div');
-		this.pickerContainer.className = 'datepicker-container';
-		this.pickerContainer.id = 'datepicker-container';
-		this.pickerInput = this.pickerContainer.createEl('input');
+		this.pickerContainer = this.viewContainer.createEl("div");
+		this.pickerContainer.className = "datepicker-container";
+		this.pickerContainer.id = "datepicker-container";
+		this.pickerInput = this.pickerContainer.createEl("input");
 
-		if (datetime.format.type === "TIME") this.pickerInput.type = 'time';
-		else if (datetime.format.type === "DATE") this.pickerInput.type = 'date';
-		else if (datetime.format.type === "DATETIME") this.pickerInput.type = 'datetime-local';
+		if (datetime.format.type === "TIME") this.pickerInput.type = "time";
+		else if (datetime.format.type === "DATE") this.pickerInput.type = "date";
+		else if (datetime.format.type === "DATETIME") this.pickerInput.type = "datetime-local";
 
-		this.pickerInput.id = 'datepicker-input';
-		this.pickerInput.className = 'datepicker-input';
+		this.pickerInput.id = "datepicker-input";
+		this.pickerInput.className = "datepicker-input";
 
-		this.pickerInput.value = moment(datetime.value, [
-			"YYYY-MM-DD hh:mm A"
-			, "YYYY-MM-DDThh:mm"
-			, "YYYY-MM-DD hh:mma"
-			, "YYYY.MM.DD HH:mm"
-			, "YYYY-MM-DD"
-			, "DD-MM-YYYY HH:mm"
-			, "DD-MM-YYYY hh:mm A"
-			, "DD-MM-YYYY hh:mma"
-			, "DD-MM-YYYY"
-			, "hh:mm A"
-			, "HH:mm"
-		], false).format(datetime.format.formatToPicker);
+		this.pickerInput.value = moment(
+			datetime.value,
+			[
+				"YYYY-MM-DD hh:mm A",
+				"YYYY-MM-DDThh:mm",
+				"YYYY-MM-DD hh:mma",
+				"YYYY.MM.DD HH:mm",
+				"YYYY-MM-DD",
+				"DD-MM-YYYY HH:mm",
+				"DD-MM-YYYY hh:mm A",
+				"DD-MM-YYYY hh:mma",
+				"DD-MM-YYYY",
+				"hh:mm A",
+				"HH:mm",
+			],
+			false
+		).format(datetime.format.formatToPicker);
 
-		const acceptButton = this.pickerContainer.createEl('button');
-		acceptButton.className = 'datepicker-container-button';
-		setIcon(acceptButton, 'check');
+		const acceptButton = this.pickerContainer.createEl("button");
+		acceptButton.className = "datepicker-container-button";
+		setIcon(acceptButton, "check");
 
 		const buttonEventAbortController = new AbortController();
 		const acceptButtonEventHandler = (event: Event) => {
 			// event.preventDefault();
-			if (this.pickerInput.value === '') {
-				new Notice('Please enter a valid date');
+			console.log("first");
+			if (this.pickerInput.value === "") {
+				new Notice("Please enter a valid date");
 			} else {
 				Datepicker.enterPressed = true;
 				this.submitAndClose();
 				buttonEventAbortController.abort();
 			}
-		}
-		acceptButton.addEventListener('click', acceptButtonEventHandler, { signal: buttonEventAbortController.signal });
-		acceptButton.addEventListener('touchend', acceptButtonEventHandler, { signal: buttonEventAbortController.signal });
+		};
+		this.pickerInput.addEventListener(
+			"oninput",
+			(event) => {
+				acceptButtonEventHandler(event);
+				this.pickerInput.blur();
+			},
+			{
+				signal: buttonEventAbortController.signal,
+			}
+		);
+		acceptButton.addEventListener("click", acceptButtonEventHandler, { signal: buttonEventAbortController.signal });
+		acceptButton.addEventListener("touchend", acceptButtonEventHandler, {
+			signal: buttonEventAbortController.signal,
+		});
 
-		const cancelButton = this.pickerContainer.createEl('button');
-		cancelButton.className = 'datepicker-container-button';
-		setIcon(cancelButton, 'x');
+		const cancelButton = this.pickerContainer.createEl("button");
+		cancelButton.className = "datepicker-container-button";
+		setIcon(cancelButton, "x");
 		function cancelButtonEventHandler(event: Event) {
 			event.preventDefault();
 
@@ -863,64 +935,77 @@ class Datepicker {
 			buttonEventAbortController.abort();
 		}
 
-		cancelButton.addEventListener('click', cancelButtonEventHandler.bind(this), { signal: buttonEventAbortController.signal });
-		cancelButton.addEventListener('touchend', cancelButtonEventHandler.bind(this), { signal: buttonEventAbortController.signal });
-
+		cancelButton.addEventListener("click", cancelButtonEventHandler.bind(this), {
+			signal: buttonEventAbortController.signal,
+		});
+		cancelButton.addEventListener("touchend", cancelButtonEventHandler.bind(this), {
+			signal: buttonEventAbortController.signal,
+		});
 
 		const controller = new AbortController();
 		const keypressHandler = (event: KeyboardEvent) => {
-			if (event.key === 'ArrowDown') {
+			if (event.key === "ArrowDown") {
 				if (DatepickerPlugin.settings.focusOnArrowDown) {
 					event.preventDefault();
 					this.focus();
 					controller.abort();
 				}
 			}
-			if (event.key === 'Escape') {
+			if (event.key === "Escape") {
 				event.preventDefault();
 				Datepicker.escPressed = true;
 				this.close();
 				controller.abort();
 			}
-		}
-		this.pickerContainer.parentElement?.addEventListener('keydown', keypressHandler, { signal: controller.signal, capture: true });
+		};
+		this.pickerContainer.parentElement?.addEventListener("keydown", keypressHandler, {
+			signal: controller.signal,
+			capture: true,
+		});
 
-
-		this.pickerInput.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter') {
-				if (this.pickerInput.value === '') {
-					new Notice('Please enter a valid date/time');
-				} else {
-					Datepicker.enterPressed = true;
-					this.submitAndClose();
+		this.pickerInput.addEventListener(
+			"keydown",
+			(event) => {
+				if (event.key === "Enter") {
+					if (this.pickerInput.value === "") {
+						new Notice("Please enter a valid date/time");
+					} else {
+						Datepicker.enterPressed = true;
+						this.submitAndClose();
+					}
 				}
-			}
-			// this works only when the datepicker is in focus
-			if (event.key === 'Escape') {
-				Datepicker.escPressed = true;
-				this.close();
-			}
-		}, { capture: true });
-
+				// this works only when the datepicker is in focus
+				if (event.key === "Escape") {
+					Datepicker.escPressed = true;
+					this.close();
+				}
+			},
+			{ capture: true }
+		);
 
 		const blurEventHandler = () => {
 			setTimeout(() => {
-				if (!this.submited && !Datepicker.escPressed && !Datepicker.enterPressed && DatepickerPlugin.settings.autoApplyEdits)
+				if (
+					!this.submited &&
+					!Datepicker.escPressed &&
+					!Datepicker.enterPressed &&
+					DatepickerPlugin.settings.autoApplyEdits
+				)
 					this.submit();
-			}, 300);
-		}
-		this.pickerInput.addEventListener('blur', blurEventHandler,);
+			}, 0);
+		};
+		this.pickerInput.addEventListener("blur", blurEventHandler);
 
 		this.updatePosition(pos);
 
-		// On mobile, the calendar doesn't show up the first time the input is touched,		
+		// On mobile, the calendar doesn't show up the first time the input is touched,
 		// unless the element is focused, and focusing the element causes unintended closing
 		// of keyboard, so I implement event listeners and prevent default behavior.
 		if (Platform.isMobile) {
-			this.pickerInput.addEventListener('touchstart', (e) => {
+			this.pickerInput.addEventListener("touchstart", (e) => {
 				e.preventDefault();
-			})
-			this.pickerInput.addEventListener('touchend', (e) => {
+			});
+			this.pickerInput.addEventListener("touchend", (e) => {
 				e.preventDefault();
 				(this.pickerInput as any).showPicker();
 			});
@@ -930,10 +1015,10 @@ class Datepicker {
 			if (!Platform.isMobile) this.focus();
 			else if (!DatepickerPlugin.settings.immediatelyShowCalendar) this.focus();
 
-		const click = new MouseEvent('click', {
+		const click = new MouseEvent("click", {
 			bubbles: true,
 			cancelable: true,
-			view: activeWindow
+			view: activeWindow,
 		});
 
 		if (DatepickerPlugin.settings.immediatelyShowCalendar) {
@@ -941,7 +1026,7 @@ class Datepicker {
 			if (Platform.isMobile) {
 				this.pickerInput.focus();
 				setTimeout(() => {
-					this.pickerInput.dispatchEvent(click)
+					this.pickerInput.dispatchEvent(click);
 					Datepicker.calendarImmediatelyShownOnce = true;
 				}, 150);
 			} else {
@@ -952,13 +1037,12 @@ class Datepicker {
 				setTimeout(() => {
 					(this.pickerInput as any).showPicker();
 					Datepicker.calendarImmediatelyShownOnce = true;
-				}, 500);
+				}, 100);
 			}
 		}
 
 		this.isOpened = true;
 	}
-
 }
 
 class DatepickerSettingTab extends PluginSettingTab {
@@ -975,96 +1059,99 @@ class DatepickerSettingTab extends PluginSettingTab {
 		settingsContainerElement.empty();
 
 		new Setting(settingsContainerElement)
-			.setName('Show a picker button for dates')
-			.setDesc('Shows a button with a calendar icon associated with date values, select it to open the picker (Reloading Obsidian may be required)')
-			.addToggle((toggle) => toggle
-				.setValue(DatepickerPlugin.settings.showDateButtons)
-				.onChange(async (value) => {
+			.setName("Show a picker button for dates")
+			.setDesc(
+				"Shows a button with a calendar icon associated with date values, select it to open the picker (Reloading Obsidian may be required)"
+			)
+			.addToggle((toggle) =>
+				toggle.setValue(DatepickerPlugin.settings.showDateButtons).onChange(async (value) => {
 					DatepickerPlugin.settings.showDateButtons = value;
 					await this.plugin.saveSettings();
-				}));
+				})
+			);
 
 		new Setting(settingsContainerElement)
-			.setName('Show a picker button for times')
-			.setDesc('Shows a button with a clock icon associated with time values, select it to open the picker (Reloading Obsidian may be required)')
-			.addToggle((toggle) => toggle
-				.setValue(DatepickerPlugin.settings.showTimeButtons)
-				.onChange(async (value) => {
+			.setName("Show a picker button for times")
+			.setDesc(
+				"Shows a button with a clock icon associated with time values, select it to open the picker (Reloading Obsidian may be required)"
+			)
+			.addToggle((toggle) =>
+				toggle.setValue(DatepickerPlugin.settings.showTimeButtons).onChange(async (value) => {
 					DatepickerPlugin.settings.showTimeButtons = value;
 					await this.plugin.saveSettings();
-				}));
+				})
+			);
 
 		new Setting(settingsContainerElement)
-			.setName('Show automatically')
-			.setDesc('Datepicker will show automatically whenever a date/time value is selected')
-			.addToggle((toggle) => toggle
-				.setValue(DatepickerPlugin.settings.showAutomatically)
-				.onChange(async (value) => {
+			.setName("Show automatically")
+			.setDesc("Datepicker will show automatically whenever a date/time value is selected")
+			.addToggle((toggle) =>
+				toggle.setValue(DatepickerPlugin.settings.showAutomatically).onChange(async (value) => {
 					DatepickerPlugin.settings.showAutomatically = value;
 					await this.plugin.saveSettings();
-				}));
+				})
+			);
 
 		new Setting(settingsContainerElement)
-			.setName('Auto apply edits')
-			.setDesc('Will automatically apply edits made to the date when the datepicker closes or loses focus')
-			.addToggle((toggle) => toggle
-				.setValue(DatepickerPlugin.settings.autoApplyEdits)
-				.onChange(async (value) => {
+			.setName("Auto apply edits")
+			.setDesc("Will automatically apply edits made to the date when the datepicker closes or loses focus")
+			.addToggle((toggle) =>
+				toggle.setValue(DatepickerPlugin.settings.autoApplyEdits).onChange(async (value) => {
 					DatepickerPlugin.settings.autoApplyEdits = value;
 					await this.plugin.saveSettings();
-				}));
-
+				})
+			);
 
 		new Setting(settingsContainerElement)
-			.setName('Immediately show calendar')
-			.setDesc('Immediately show the calendar when the datepicker opens')
-			.addToggle((toggle) => toggle
-				.setValue(DatepickerPlugin.settings.immediatelyShowCalendar)
-				.onChange(async (value) => {
+			.setName("Immediately show calendar")
+			.setDesc("Immediately show the calendar when the datepicker opens")
+			.addToggle((toggle) =>
+				toggle.setValue(DatepickerPlugin.settings.immediatelyShowCalendar).onChange(async (value) => {
 					DatepickerPlugin.settings.immediatelyShowCalendar = value;
 					await this.plugin.saveSettings();
-				}));
+				})
+			);
 
 		new Setting(settingsContainerElement)
-			.setName('Autofocus')
-			.setDesc('Automatically focus the datepicker whenever the datepicker opens')
-			.addToggle((toggle) => toggle
-				.setValue(DatepickerPlugin.settings.autofocus)
-				.onChange(async (value) => {
+			.setName("Autofocus")
+			.setDesc("Automatically focus the datepicker whenever the datepicker opens")
+			.addToggle((toggle) =>
+				toggle.setValue(DatepickerPlugin.settings.autofocus).onChange(async (value) => {
 					DatepickerPlugin.settings.autofocus = value;
 					await this.plugin.saveSettings();
-				}));
+				})
+			);
 
 		new Setting(settingsContainerElement)
-			.setName('Focus on pressing down arrow key')
-			.setDesc('Focuses the datepicker when the down arrow keyboard key is pressed')
-			.addToggle((toggle) => toggle
-				.setValue(DatepickerPlugin.settings.focusOnArrowDown)
-				.onChange(async (value) => {
+			.setName("Focus on pressing down arrow key")
+			.setDesc("Focuses the datepicker when the down arrow keyboard key is pressed")
+			.addToggle((toggle) =>
+				toggle.setValue(DatepickerPlugin.settings.focusOnArrowDown).onChange(async (value) => {
 					DatepickerPlugin.settings.focusOnArrowDown = value;
 					await this.plugin.saveSettings();
-				}));
+				})
+			);
 
 		new Setting(settingsContainerElement)
-			.setName('Insert new time in 24 hour format')
-			.setDesc('Insert time in 24 hour format when performing "Insert new time" and "Insert new date and time" commands')
-			.addToggle((toggle) => toggle
-				.setValue(DatepickerPlugin.settings.insertIn24HourFormat)
-				.onChange(async (value) => {
+			.setName("Insert new time in 24 hour format")
+			.setDesc(
+				'Insert time in 24 hour format when performing "Insert new time" and "Insert new date and time" commands'
+			)
+			.addToggle((toggle) =>
+				toggle.setValue(DatepickerPlugin.settings.insertIn24HourFormat).onChange(async (value) => {
 					DatepickerPlugin.settings.insertIn24HourFormat = value;
 					await this.plugin.saveSettings();
-				}));
+				})
+			);
 
 		new Setting(settingsContainerElement)
-			.setName('Select date/time text')
-			.setDesc('Automatically select the entire date/time text when a date/time is selected')
-			.addToggle((toggle) => toggle
-				.setValue(DatepickerPlugin.settings.selectDateText)
-				.onChange(async (value) => {
+			.setName("Select date/time text")
+			.setDesc("Automatically select the entire date/time text when a date/time is selected")
+			.addToggle((toggle) =>
+				toggle.setValue(DatepickerPlugin.settings.selectDateText).onChange(async (value) => {
 					DatepickerPlugin.settings.selectDateText = value;
 					await this.plugin.saveSettings();
-				}));
-
-
+				})
+			);
 	}
 }
